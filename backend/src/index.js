@@ -4,12 +4,14 @@ import morgan from "morgan";
 import createError from "http-errors";
 import {} from "dotenv/config";
 import "./helpers/init_mongodb.js";
+import cookieParser from "cookie-parser";
 
 
 const app = express();
 app.use(morgan('dev'))
 //to parse the request body if it is JSON
 app.use(express.json())
+app.use(cookieParser)
 //To parse the request body if it is a form
 app.use(express.urlencoded({extended: true}))
 

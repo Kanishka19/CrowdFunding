@@ -1,4 +1,5 @@
 import { Router } from "express";
+import cookieParser from "cookie-parser";
 import {Users} from "../models/User.js";
 import bcrypt from "bcryptjs";
 import {authSchema} from "../helpers/validation.js";
@@ -26,6 +27,8 @@ router.post('/register', async(req, res, next) => {
     const savedUser = await user.save();
     const accessToken = await jwtAccessToken(savedUser.id)
     const refreshToken = await signRefreshToken(savedUser.id)
+    res.cookie('accessToken', accessToken, { httpOnly: true, secure: true });
+    res.cookie('refreshToken', refreshToken, { httpOnly: true, secure: true });
     res.send({accessToken, refreshToken});
     }
     catch(error){
@@ -47,6 +50,8 @@ router.post('/login', async (req, res, next) => {
     
     const accessToken = await jwtAccessToken(user.id)
     const refreshToken = await signRefreshToken(user.id)
+    res.cookie('accessToken', accessToken, { httpOnly: true, secure: true });
+    res.cookie('refreshToken', refreshToken, { httpOnly: true, secure: true });
     res.send({accessToken, refreshToken});
 }
  catch(err){
