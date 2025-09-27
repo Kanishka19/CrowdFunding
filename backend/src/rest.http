@@ -1,21 +1,50 @@
-curl -X GET "http://localhost:3000/auth" -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE3MjI5MTE4MDYsImV4cCI6MTcyMjkxNTQwNiwiYXVkIjoiNjZhZjdhODA4YTI3ZGI4NWI1Yzk5MDRlIiwiaXNzIjoiY3Jvd2RmdW5kLmNvbSJ9.Wkn7-ce7Sk9HVxu507qMjrNiVXl66AOdQ_5xd4745QA"
-
-####
-curl -X POST http://localhost:3000/auth/register -H "Content-Type: application/json" -d '{"email": "shubhi@gmail.com", "password": "shubhi123"}'
-
-####
-curl -X POST http://localhost:3000/auth/login -H "Content-Type: application/json" -d '{"email": "kanishka@gmail.com", "password": "kanishka123"}'
+curl -X GET "http://localhost:3000/api/auth" -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE3MjI5MTE4MDYsImV4cCI6MTcyMjkxNTQwNiwiYXVkIjoiNjZhZjdhODA4YTI3ZGI4NWI1Yzk5MDRlIiwiaXNzIjoiY3Jvd2RmdW5kLmNvbSJ9.Wkn7-ce7Sk9HVxu507qMjrNiVXl66AOdQ_5xd4745QA"
 
 
 ####
-POST http://localhost:3000/auth/refresh-token
+curl -X GET http://localhost:3000/api/cause -H "Content-Type: application/json"
+
+####
+curl -X POST  http://localhost:3000/api/contact -H "Content-Type: application/json" -d '{"name": "kanishka", "email": "ylolo@gmail.com", "message": "hey sending you a message" }'
+
+####
+POST http://localhost:3000/api/auth/register
 Content-Type: application/json
 
 {
-"refreshToken" : "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE3MjI5MTQzNjksImV4cCI6MTcyMjkxNzk2OSwiYXVkIjoiNjZhZjdhODA4YTI3ZGI4NWI1Yzk5MDRlIiwiaXNzIjoiY3Jvd2RmdW5kLmNvbSJ9.YvxFHFj_SDihGOVzi7UvvFmpZj6n0l2e0BxTCBl6fPM"
+  "email": "tttestuser@example.com",
+  "fullname": "Test User",
+  "phone": "1234567890",
+  "birthdate": "2001-01-01",
+  "password": "secureepassword",
+  "confirmPassword": "secureepassword"
 }
 
+### Login with an existing user
+POST http://localhost:3000/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "testuser@example.com",
+  "password": "securepassword"
+}
 ####
-DELETE  http://localhost:3000/auth/logout
+curl -X POST http://localhost:3000/api/payment/donate \
+-H "Content-Type: application/json" \
+-d '{
+  "amount": 50000,
+  "currency": "INR",
+  "receipt": "receipt#1",
+  "notes": {
+    "purpose": "Donation"
+  }
+}'
 
-
+####
+curl -X POST http://localhost:3000/api/payment/verify-payment \
+-H "Content-Type: application/json" \
+-d '{
+  "razorpay_order_id": "order_9A33XWu170gUtm",
+  "razorpay_payment_id": "pay_29QQoUBi66xm2f",
+  "razorpay_signature": "5d2b7f3e5a2b3c4d5e6f7g8h9i0j1k2l3m4n5o6p"
+}'
