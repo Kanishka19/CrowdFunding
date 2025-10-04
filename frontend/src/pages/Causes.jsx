@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import Donate from "./Donate"; 
 
 const Causes = () => {
   const [causes, setCauses] = useState([]);
@@ -7,9 +8,7 @@ const Causes = () => {
   const getData = async () => {
     try {
       const response = await axios.get("/api/cause", {
-        headers: {
-          Accept: "application/json",
-        },
+        headers: { Accept: "application/json" },
       });
       setCauses(response.data);
     } catch (error) {
@@ -31,7 +30,7 @@ const Causes = () => {
           🎗️Our Causes🎗️
         </h1>
 
-        {/* Grid layout instead of carousel */}
+        {/* Grid layout */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 animate-fadeInUp">
           {causes?.map((cause, index) => (
             <div
@@ -59,7 +58,7 @@ const Causes = () => {
               <div className="w-full mb-4">
                 <div className="flex items-center justify-between w-full mb-1">
                   <div className="text-sm text-gray-700">
-                    ${cause.donations.current} raised of ${cause.donations.goal}
+                    ₹{cause.donations.current} raised of ₹{cause.donations.goal}
                   </div>
                   <div className="ml-2 text-red-500">💜</div>
                 </div>
@@ -76,9 +75,7 @@ const Causes = () => {
               </div>
 
               {/* Donate Button */}
-              <button className="mt-auto bg-[#694F8E] text-white px-6 py-2 rounded-full font-semibold hover:bg-[#563a70] transition-colors duration-300">
-                Donate
-              </button>
+              <Donate donatedto={cause.title}/>
             </div>
           ))}
         </div>

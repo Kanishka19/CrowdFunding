@@ -1,6 +1,7 @@
 import express from "express";
 import auth from "./routes/auth.js"
 import paymentRoutes from "./routes/payment.js"
+import blogRoutes from "./routes/blogs.js"
 import morgan from "morgan";
 import createError from "http-errors";
 import {} from "dotenv/config";
@@ -38,6 +39,7 @@ app.use('/api/cause', (req, res) => {
   });
 app.use("/api/contact", contactRoutes);
 app.use('/api/payment',paymentRoutes)
+app.use('/api/blogs',blogRoutes)
 //Below functions to handle errors if route does not exist
 app.use(async(req,res,next) => {
     next(createError.NotFound(`This route does not exist`));

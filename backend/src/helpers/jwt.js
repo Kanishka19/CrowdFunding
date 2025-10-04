@@ -3,20 +3,19 @@ import createError from "http-errors"
 
 const jwtAccessToken = (user_id) => {
     return new Promise((resolve, reject) => {
-        const payload = {};
-        
-        const options = {
-            expiresIn: "1h",
-            issuer: "crowdfund.com",
-            audience: user_id
-        }
-        jwt.sign(payload, process.env.ACCESS_TOKEN_KEY, options, (err,token) => {
-            if(err) 
-                console.log(err.message)
-            resolve(token)
-        })
-    })
-}
+      const payload = { user_id };
+      const options = {
+        expiresIn: "1h",
+        issuer: "crowdfund.com",
+        audience: user_id,
+      };
+  
+      jwt.sign(payload, process.env.ACCESS_TOKEN_KEY, options, (err, token) => {
+        if (err) return reject(err);
+        resolve(token);
+      });
+    });
+  };
 
 const verifyJwtToken = (req,res,next) => {
      if(!req.headers['Authorization'])
@@ -33,12 +32,16 @@ const verifyJwtToken = (req,res,next) => {
             console.log("Error in jwt verify")
             return next(createError.Unauthorized());
         }
-        else{
-            return next(createError.Unauthorized(err.message))
+        if(payload.user_id === req.params.userId)
+        {
+            next();
         }
-            
-        req.payload = payload;
-        next()
+        else
+        {
+            console.log("UserId not matching in token and req returning 401")
+            return next(createError.Unauthorized());
+
+        }
     });
 }
 
@@ -69,5 +72,4 @@ const verifyRefreshToken = (refreshToken) => {
         } )
     })
 }
-
 export {jwtAccessToken, verifyJwtToken, signRefreshToken, verifyRefreshToken};

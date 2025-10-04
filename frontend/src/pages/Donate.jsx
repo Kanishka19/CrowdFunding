@@ -1,9 +1,10 @@
 import React, { useState } from "react";
 import axios from "axios";
-
-const Donate = () => {
+import { useAuth } from "../context/AuthContext";
+import { useNavigate } from "react-router-dom";
+const Donate = ({donatedto}) => {
   const [amount, setAmount] = useState("");
-
+  const { user } = useAuth(); 
   // Function to dynamically load the Razorpay script
   const loadRazorpayScript = (src) => {
     return new Promise((resolve) => {
@@ -33,9 +34,8 @@ const Donate = () => {
     }
 
     try {
-      // Create an order on the server (send plain amount)
       const orderResponse = await axios.post("/api/payment/donate", {
-        amount: amount, // backend multiplies by 100
+        amount: amount, 
         currency: "INR",
       });
 
@@ -43,8 +43,8 @@ const Donate = () => {
 
       // Razorpay payment options
       const options = {
-        key: "rzp_test_RM3vr2J4Va0x2M", // use env in prod
-        amount: orderAmount.toString(), // already in paise from backend
+        key: "rzp_test_RM3vr2J4Va0x2M", 
+        amount: orderAmount.toString(), 
         currency: currency,
         name: "My Charity Org",
         description: "Donation for Cause",
@@ -53,13 +53,19 @@ const Donate = () => {
           try {
             // Send matching field names to backend
             const verifyResponse = await axios.post("/api/payment/verify-payment", {
+              userId: user.id,
+              amount,
+              currency,
               razorpay_payment_id: response.razorpay_payment_id,
               razorpay_order_id: response.razorpay_order_id,
               razorpay_signature: response.razorpay_signature,
+              donatedto
             });
 
             if (verifyResponse.status === 200) {
               alert("Thank you for your donation!");
+              window.location.href="/my-donations"
+
             } else {
               alert("Payment verification failed. Please contact support.");
             }
@@ -89,7 +95,6 @@ const Donate = () => {
 
   return (
     <div className="donate-container">
-      <h1 className="text-2xl font-bold mb-4">Donate to Cause</h1>
       <input
         type="number"
         placeholder="Enter donation amount"

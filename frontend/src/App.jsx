@@ -13,6 +13,8 @@ import Home from "./pages/Home";
 import Dashboard from "./pages/Dashboard";
 import UserNav from "./pages/userNav";
 import Donate from "./pages/Donate";
+import Blogs from "./pages/Blogs";
+import MyDonations from "./pages/myDonations";
 import {useAuth} from "./context/AuthContext"
 
 const App = () => {
@@ -30,6 +32,8 @@ const App = () => {
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/donate" element={<Donate />} />
+        <Route path="/blogs" element={<Blogs />} />
+        <Route path="/my-donations" element={<MyDonations />} />
         <Route
           path="/dashboard"
           element={

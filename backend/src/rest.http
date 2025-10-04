@@ -48,3 +48,10 @@ curl -X POST http://localhost:3000/api/payment/verify-payment \
   "razorpay_payment_id": "pay_29QQoUBi66xm2f",
   "razorpay_signature": "5d2b7f3e5a2b3c4d5e6f7g8h9i0j1k2l3m4n5o6p"
 }'
+
+####
+GET http://localhost:3000/api/blogs
+Accept: application/json
+
+####
+GET http://localhost:3000/api/payment/payment-history?userId=68d3461273330895b02713a2

@@ -28,7 +28,7 @@ const UserNav = () => {
         <Link className="p-4 font-glyphic hover:bg-[#e5cbb9] rounded-xl m-2 cursor-pointer duration-300 hover:text-black" to="/causes">
           Causes
         </Link>
-        <Link className="p-4 font-glyphic hover:bg-[#e5cbb9] rounded-xl m-2 cursor-pointer duration-300 hover:text-black" to="/blog-posts">
+        <Link className="p-4 font-glyphic hover:bg-[#e5cbb9] rounded-xl m-2 cursor-pointer duration-300 hover:text-black" to="/blogs">
           Blog Posts
         </Link>
         <Link className="p-4 font-glyphic hover:bg-[#e5cbb9] rounded-xl m-2 cursor-pointer duration-300 hover:text-black" to="/my-donations">
@@ -76,7 +76,7 @@ const UserNav = () => {
       >
         <h1 className="w-full text-3xl font-bold text-[#e5cbb9] m-4">CrowdFund</h1>
         <li className="p-4 border-b font-glyphic rounded-xl hover:bg-[#e5cbb9] duration-300 hover:text-black cursor-pointer border-gray-600">
-          <Link to="/blog-posts" onClick={() => setNav(false)}>Blog Posts</Link>
+          <Link to="/blogs" onClick={() => setNav(false)}>Blog Posts</Link>
         </li>
         <li className="p-4 border-b font-glyphic rounded-xl hover:bg-[#e5cbb9] duration-300 hover:text-black cursor-pointer border-gray-600">
           <Link to="/campaigns" onClick={() => setNav(false)}>Campaigns</Link>
