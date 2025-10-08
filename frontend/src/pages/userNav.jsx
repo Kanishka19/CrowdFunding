@@ -22,7 +22,7 @@ const UserNav = () => {
 
       {/* Desktop Navigation */}
       <ul className="hidden md:flex">
-        <Link className="p-4 font-glyphic hover:bg-[#e5cbb9] rounded-xl m-2 cursor-pointer duration-300 hover:text-black" to="/campaigns">
+        <Link className="p-4 font-glyphic hover:bg-[#e5cbb9] rounded-xl m-2 cursor-pointer duration-300 hover:text-black" to="/campaign">
           Campaigns
         </Link>
         <Link className="p-4 font-glyphic hover:bg-[#e5cbb9] rounded-xl m-2 cursor-pointer duration-300 hover:text-black" to="/causes">

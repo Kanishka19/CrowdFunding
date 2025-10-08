@@ -11,6 +11,8 @@ import cors from "cors";
 import causesdata from "./causesdata.js"
 import contactRoutes from "./routes/ContactRoutes.js";
 import rateLimit from 'express-rate-limit';
+import campaignOrgRoutes from "./routes/campaignOrgs.js";
+import { verifyJwtToken } from "./helpers/jwt.js";
 
 const authLimiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
@@ -19,7 +21,7 @@ const authLimiter = rateLimit({
 });
 
 const app = express();
-
+app.disable('etag')
 app.use(cors({
     origin: 'http://localhost:5173', // Frontend origin
     methods: ['GET', 'POST', 'PUT', 'DELETE'], // Allowed HTTP methods
@@ -33,13 +35,14 @@ app.use(cookieParser())
 app.use(express.urlencoded({extended: true}))
 
 app.use('/api/auth', auth)
-app.use('/api/cause', (req, res) => {
+app.use('/api/cause',(req, res) => {
     res.setHeader('Content-Type', 'application/json');
     res.json(causesdata); 
   });
-app.use("/api/contact", contactRoutes);
-app.use('/api/payment',paymentRoutes)
+app.use("/api/contact",contactRoutes);
+app.use('/api/payment',verifyJwtToken,paymentRoutes)
 app.use('/api/blogs',blogRoutes)
+app.use('/api/org-campaign',campaignOrgRoutes)
 //Below functions to handle errors if route does not exist
 app.use(async(req,res,next) => {
     next(createError.NotFound(`This route does not exist`));

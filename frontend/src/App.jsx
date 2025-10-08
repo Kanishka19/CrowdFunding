@@ -15,6 +15,7 @@ import UserNav from "./pages/userNav";
 import Donate from "./pages/Donate";
 import Blogs from "./pages/Blogs";
 import MyDonations from "./pages/myDonations";
+import Campaign from "./pages/Campaign";
 import {useAuth} from "./context/AuthContext"
 
 const App = () => {
@@ -34,6 +35,7 @@ const App = () => {
         <Route path="/donate" element={<Donate />} />
         <Route path="/blogs" element={<Blogs />} />
         <Route path="/my-donations" element={<MyDonations />} />
+        <Route path="/campaign" element={<Campaign />} />
         <Route
           path="/dashboard"
           element={

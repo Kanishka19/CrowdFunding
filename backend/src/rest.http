@@ -55,3 +55,9 @@ Accept: application/json
 
 ####
 GET http://localhost:3000/api/payment/payment-history?userId=68d3461273330895b02713a2
+
+####
+GET http://localhost:3000/api/org-campaign/campaign
+
+####
+GET http://localhost:3000/api/org-campaign/organization
