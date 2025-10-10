@@ -65,7 +65,7 @@ router.get('/', async (req, res) => {
     if (blogsCache && now - cacheTimestamp < CACHE_TTL) {
       return res.json(blogsCache);
     }
-    const drive = getDriveClient();
+    const drive = getDriveClient("readOnly");
     const blogs = await getBlogFiles(drive);
     blogsCache = blogs;
     cacheTimestamp = now;

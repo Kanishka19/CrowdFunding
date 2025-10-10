@@ -12,6 +12,7 @@ import causesdata from "./causesdata.js"
 import contactRoutes from "./routes/ContactRoutes.js";
 import rateLimit from 'express-rate-limit';
 import campaignOrgRoutes from "./routes/campaignOrgs.js";
+import orgRegRoutes from "./routes/orgRegistration.js";
 import { verifyJwtToken } from "./helpers/jwt.js";
 
 const authLimiter = rateLimit({
@@ -43,6 +44,7 @@ app.use("/api/contact",contactRoutes);
 app.use('/api/payment',verifyJwtToken,paymentRoutes)
 app.use('/api/blogs',blogRoutes)
 app.use('/api/org-campaign',campaignOrgRoutes)
+app.use('/api/fileupload',orgRegRoutes)
 //Below functions to handle errors if route does not exist
 app.use(async(req,res,next) => {
     next(createError.NotFound(`This route does not exist`));
