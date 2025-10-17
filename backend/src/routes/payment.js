@@ -4,6 +4,10 @@ import crypto from "crypto";
 import dotenv from "dotenv";
 import { Users } from "../models/User.js";
 import { Payments } from "../models/Payments.js";
+import Causes from "../models/Causes.js";
+import { Campaign } from "../models/CampaignDets.js";
+
+
 dotenv.config();
 
 const router = express.Router();
@@ -63,6 +67,24 @@ router.post('/verify-payment', async (req, res) => {
       });
 
       await payment.save();
+      // Find the entry in causes collection and campaign collection using the name donatedto and update the relevant fields
+      const cause = await Causes.findOne({ title: donatedto });
+      if (cause) {
+        const currentAmount = parseInt(cause.current_donation_amount) + parseInt(amount);
+        cause.current_donation_amount = currentAmount
+        await cause.save();
+      }
+      const campaign = await Campaign.findOne({ title: donatedto });
+      if (campaign) {
+        
+        const raisedAmount = parseInt(campaign.raisedAmount) + parseInt(amount);
+        const donorsCount = parseInt(campaign.donorsCount) + 1;
+        campaign.raisedAmount = raisedAmount;
+        campaign.donorsCount = donorsCount;
+        await campaign.save();
+      }
+
+
       res.status(200).json({ message: 'Payment verified and saved successfully' });
     } catch (error) {
       const payment = new Payments({

@@ -63,4 +63,27 @@ GET http://localhost:3000/api/org-campaign/campaign
 GET http://localhost:3000/api/org-campaign/organization
 
 ####
+curl -X POST http://localhost:3000/api/fileupload/registerOrg \
+-H "Content-Type: application/json" \
+-d '{
+  "orgName": "Helping Hands Foundation",
+  "registrationNumber": "REG-2020-456789",
+  "organizationType": "Non-Profit Organization",
+  "dateOfEstablishment": "2015-06-12T00:00:00.000Z",
+  "address": "42, Green Avenue, Near Central Park",
+  "cityStatePincode": "Pune, Maharashtra - 411001",
+  "websiteOrSocialLinks": "https://www.helpinghands.org",
+  "officialEmail": "contact@helpinghands.org",
+  "contactNumbers": ["+91-9876543210", "+91-9321456789"],
+
+  "authorizedRepresentativeDetails": {
+    "fullName": "Anita Sharma",
+    "designation": "Director of Operations",
+    "governmentIdProof": "AADHAR-XXXX-XXXX-1234",
+    "email": "anita.sharma@helpinghands.org",
+    "phoneNumber": "+91-9988776655"
+  }
+}'
+
+####
 curl -X POST http://localhost:3000/api/fileupload/uploadOrg \

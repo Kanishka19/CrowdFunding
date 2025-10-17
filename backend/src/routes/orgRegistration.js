@@ -2,14 +2,15 @@ import express from 'express'
 import multer from 'multer'
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import { v4 as uuidv4 } from 'uuid';
+import {OrgRegistry} from '../models/OrgRegistryForm.js';
 const router = express.Router();
 const storage = multer.memoryStorage();
 const upload =multer({storage})
 
 
 router.post('/registerOrg', async (req, res) => {
-
-    const { orgName, registrationNumber, organizationType, dateOfEstablishment, cityStatePincode, websiteOrSocialLinks, officialEmail, contactNumbers, authorizedRepresentativeDetails } = req.body;
+    console.log('Request Body:', req.body);
+    const { orgName, registrationNumber, organizationType, dateOfEstablishment, address, cityStatePincode, websiteOrSocialLinks, officialEmail, contactNumbers, authorizedRepresentativeDetails } = req.body;
 
     const existingOrg = await OrgRegistry.findOne({ orgName });
     if (existingOrg) {

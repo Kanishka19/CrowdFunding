@@ -8,12 +8,13 @@ import {} from "dotenv/config";
 import "./helpers/init_mongodb.js";
 import cookieParser from "cookie-parser";
 import cors from "cors";
-import causesdata from "./causesdata.js"
+import causesRoutes from "./routes/causesRoute.js"
 import contactRoutes from "./routes/ContactRoutes.js";
 import rateLimit from 'express-rate-limit';
 import campaignOrgRoutes from "./routes/campaignOrgs.js";
 import orgRegRoutes from "./routes/orgRegistration.js";
 import { verifyJwtToken } from "./helpers/jwt.js";
+import adminAPIRoutes from "./routes/adminAPIRoutes.js";
 
 const authLimiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
@@ -36,15 +37,13 @@ app.use(cookieParser())
 app.use(express.urlencoded({extended: true}))
 
 app.use('/api/auth', auth)
-app.use('/api/cause',(req, res) => {
-    res.setHeader('Content-Type', 'application/json');
-    res.json(causesdata); 
-  });
+app.use('/api/cause',causesRoutes);
 app.use("/api/contact",contactRoutes);
 app.use('/api/payment',verifyJwtToken,paymentRoutes)
 app.use('/api/blogs',blogRoutes)
 app.use('/api/org-campaign',campaignOrgRoutes)
 app.use('/api/fileupload',orgRegRoutes)
+app.use('/admin',adminAPIRoutes)
 //Below functions to handle errors if route does not exist
 app.use(async(req,res,next) => {
     next(createError.NotFound(`This route does not exist`));
