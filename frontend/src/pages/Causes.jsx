@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import Donate from "./Donate"; 
+import { motion } from "framer-motion";
+import Donate from "./Donate";
 
 const Causes = () => {
   const [causes, setCauses] = useState([]);
@@ -20,67 +21,111 @@ const Causes = () => {
     getData();
   }, []);
 
+  // progress-based message
+  const getProgressLabel = (progress) => {
+    if (progress < 20) return "Let's Begin 🚀";
+    if (progress < 80) return "Halfway There ♦️";
+    if (progress < 100) return "Approaching Goal 🎯";
+    return "Goal Reached 🎉";
+  };
+
   return (
-    <div
+    <section
       id="causes"
-      className="bg-gradient-to-b from-[#F5EFFF] to-[#EDE7FF] min-h-screen py-32"
+      className="relative py-24 px-6 lg:px-16 bg-gradient-to-b from-[#F5EFFF] via-[#EDE7FF] to-[#EADCFD] overflow-hidden"
     >
-      <div className="max-w-6xl mx-auto px-4">
-        <h1 className="text-5xl text-center font-bold mb-12 text-[#694F8E] animate-fadeInDown">
-          🎗️Our Causes🎗️
+      {/* Background blur gradient */}
+      <div className="absolute inset-0 -z-10 overflow-hidden">
+        <div className="absolute top-1/3 left-1/4 w-[600px] h-[600px] bg-gradient-to-tr from-[#d7b4ff] via-[#f5e1ff] to-[#ffe4f9] blur-[150px] opacity-50" />
+      </div>
+
+      {/* Heading */}
+      <div className="text-center mb-20">
+        <h1 className="text-5xl md:text-6xl font-extrabold text-gray-800 mb-3">
+          <span className="text-[#5f4696]">Our</span> Causes That <br />
+          <span className="bg-gradient-to-r from-[#5f4696] to-[#9E77ED] text-transparent bg-clip-text">
+            Change Lives
+          </span>
         </h1>
 
-        {/* Grid layout */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 animate-fadeInUp">
-          {causes?.map((cause, index) => (
-            <div
+        <div className="h-[3px] w-24 bg-gradient-to-r from-[#9E77ED] to-[#7F56D9] mx-auto rounded-full mb-4"></div>
+        <p className="text-lg text-gray-600 font-medium max-w-xl mx-auto">
+          Every contribution counts. Join hands to bring smiles and hope 💟
+        </p>
+      </div>
+
+
+      {/* Causes Grid */}
+      <div className="max-w-6xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10">
+        {causes?.map((cause, index) => {
+          const progress =
+            (cause.donations.current / cause.donations.goal) * 100;
+
+          return (
+            <motion.div
               key={index}
-              className="bg-white rounded-lg shadow-xl transform hover:scale-105 hover:shadow-2xl transition-transform duration-300 ease-in-out p-4 flex flex-col items-center text-center"
+              initial={{ opacity: 0, y: 50 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: index * 0.1 }}
+              className="bg-white/80 backdrop-blur-md rounded-2xl shadow-lg hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 overflow-hidden flex flex-col"
             >
               {/* Image */}
-              <div className="relative w-full h-[150px] mb-4 overflow-hidden rounded-md group">
+              <div className="relative h-48 w-full overflow-hidden">
                 <img
                   src={cause.image}
                   alt={cause.title}
-                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300 ease-in-out"
+                  className="w-full h-full object-cover transition-transform duration-500 ease-in-out group-hover:scale-110"
                 />
+                {cause.category && (
+                  <span className="absolute top-3 right-3 bg-[#7F56D9]/80 text-white text-xs font-medium px-3 py-1 rounded-full shadow-sm">
+                    {cause.category}
+                  </span>
+                )}
               </div>
 
-              {/* Title */}
-              <h3 className="text-lg font-semibold text-[#694F8E] mb-2">
-                {cause.title}
-              </h3>
+              {/* Content */}
+              <div className="flex flex-col flex-1 p-6 text-center">
+                <h3 className="text-lg font-semibold text-[#694F8E] mb-1">
+                  {cause.title}
+                </h3>
+                <p className="text-sm text-gray-600 mb-4 line-clamp-3">
+                  {cause.description}
+                </p>
 
-              {/* Description */}
-              <p className="text-gray-600 mb-4">{cause.description}</p>
-
-              {/* Donations */}
-              <div className="w-full mb-4">
-                <div className="flex items-center justify-between w-full mb-1">
-                  <div className="text-sm text-gray-700">
-                    ₹{cause.donations.current} raised of ₹{cause.donations.goal}
+                {/* Donation Progress */}
+                <div className="w-full mb-3">
+                  <div className="flex justify-between text-sm text-gray-700 mb-1">
+                    <span>₹{cause.donations.current.toLocaleString()}</span>
+                    <span>₹{cause.donations.goal.toLocaleString()}</span>
                   </div>
-                  <div className="ml-2 text-red-500">💜</div>
+                  <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+                    <motion.div
+                      className="bg-gradient-to-r from-[#9E77ED] to-[#7F56D9] h-2 rounded-full"
+                      initial={{ width: 0 }}
+                      animate={{ width: `${Math.min(progress, 100)}%` }}
+                      transition={{ duration: 1 }}
+                    />
+                  </div>
                 </div>
-                <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div
-                    className="bg-[#694F8E] h-2 rounded-full"
-                    style={{
-                      width: `${
-                        (cause.donations.current / cause.donations.goal) * 100
-                      }%`,
-                    }}
-                  ></div>
+
+                {/* Progress Text */}
+                <p className="text-sm font-medium text-[#694F8E] mb-4">
+                  {getProgressLabel(progress)}
+                </p>
+
+                {/* Donate Button */}
+                <div className="mt-auto">
+                  <Donate
+                    donatedto={cause.title}
+                    className="w-full bg-gradient-to-r from-[#7F56D9] to-[#9E77ED] text-white font-semibold py-2 rounded-full shadow-md hover:opacity-90 transition-all"
+                  />
                 </div>
               </div>
-
-              {/* Donate Button */}
-              <Donate donatedto={cause.title}/>
-            </div>
-          ))}
-        </div>
+            </motion.div>
+          );
+        })}
       </div>
-    </div>
+    </section>
   );
 };
 

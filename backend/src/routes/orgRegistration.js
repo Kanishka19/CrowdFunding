@@ -10,7 +10,7 @@ const upload =multer({storage})
 
 router.post('/registerOrg', async (req, res) => {
     console.log('Request Body:', req.body);
-    const { orgName, registrationNumber, organizationType, dateOfEstablishment, address, cityStatePincode, websiteOrSocialLinks, officialEmail, contactNumbers, authorizedRepresentativeDetails } = req.body;
+    const { orgName, registrationNumber, organizationType, dateOfEstablishment, address, city, state, pincode, websiteOrSocialLinks, officialEmail, contactNumbers, authorizedRepresentativeDetails } = req.body;
 
     const existingOrg = await OrgRegistry.findOne({ orgName });
     if (existingOrg) {
@@ -23,7 +23,9 @@ router.post('/registerOrg', async (req, res) => {
         organizationType,
         dateOfEstablishment,
         address,
-        cityStatePincode,
+        city,
+        state,
+        pincode,
         websiteOrSocialLinks,
         officialEmail,
         contactNumbers,

@@ -9,66 +9,53 @@ const RepresentativeDetails = ({
   const rep = orgForm.authorizedRepresentativeDetails;
 
   return (
-    <div>
-      <h2 className="text-2xl font-bold mb-6 text-center text-gray-800">
-        Authorized Representative Details
-      </h2>
-
-      <div className="grid md:grid-cols-2 gap-6">
-        <input
-          type="text"
-          placeholder="Full Name"
-          value={rep.fullName}
-          onChange={(e) => handleRepresentativeChange("fullName", e.target.value)}
-          className="border p-3 rounded-lg w-full"
-          required
-        />
-        <input
-          type="text"
-          placeholder="Designation"
-          value={rep.designation}
-          onChange={(e) => handleRepresentativeChange("designation", e.target.value)}
-          className="border p-3 rounded-lg w-full"
-          required
-        />
-        <input
-          type="text"
-          placeholder="Government ID Proof"
-          value={rep.governmentIdProof}
-          onChange={(e) => handleRepresentativeChange("governmentIdProof", e.target.value)}
-          className="border p-3 rounded-lg w-full"
-          required
-        />
-        <input
-          type="email"
-          placeholder="Email"
-          value={rep.email}
-          onChange={(e) => handleRepresentativeChange("email", e.target.value)}
-          className="border p-3 rounded-lg w-full"
-          required
-        />
-        <input
-          type="text"
-          placeholder="Phone Number"
-          value={rep.phoneNumber}
-          onChange={(e) => handleRepresentativeChange("phoneNumber", e.target.value)}
-          className="border p-3 rounded-lg w-full"
-          required
-        />
+    <div className="space-y-8">
+      {/* Header */}
+      <div>
+        <h2 className="text-2xl font-semibold text-[#694F8E] mb-2">
+          Authorized Representative Details
+        </h2>
+        <p className="text-gray-500">
+          Provide details of the authorized person representing your organization.
+        </p>
       </div>
 
-      <div className="mt-8 flex justify-between">
+      {/* Form Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        {[
+          { name: "fullName", label: "Full Name", type: "text" },
+          { name: "designation", label: "Designation", type: "text" },
+          { name: "governmentIdProof", label: "Government ID Proof", type: "text" },
+          { name: "email", label: "Email", type: "email" },
+          { name: "phoneNumber", label: "Phone Number", type: "text" },
+        ].map(({ name, label, type }) => (
+          <div key={name} className="flex flex-col items-start w-full">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              {label}
+            </label>
+            <input
+              type={type}
+              value={rep[name]}
+              onChange={(e) => handleRepresentativeChange(name, e.target.value)}
+              className="w-full border border-gray-300 rounded-xl px-4 py-2 text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#694F8E]"
+            />
+          </div>
+        ))}
+      </div>
+
+      {/* Buttons */}
+      <div className="flex justify-between">
         <button
           type="button"
           onClick={handleBack}
-          className="bg-gray-300 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-400"
+          className="border border-gray-400 text-gray-700 px-6 py-2 rounded-xl hover:bg-gray-100 transition"
         >
           ← Back
         </button>
         <button
           type="button"
           onClick={handleNext}
-          className="bg-[#694F8E] text-white px-6 py-3 rounded-lg hover:bg-[#8a6fb5]"
+          className="bg-[#694F8E] hover:bg-[#583a78] text-white px-6 py-2 rounded-xl transition"
         >
           Next →
         </button>
