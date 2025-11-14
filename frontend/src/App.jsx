@@ -12,7 +12,6 @@ import Members from "./pages/Members";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import Home from "./pages/Home";
-import Dashboard from "./pages/Dashboard";
 import UserNav from "./pages/userNav";
 import Donate from "./pages/Donate";
 import Blogs from "./pages/Blogs";
@@ -54,7 +53,6 @@ const AnimatedRoutes = ({ user }) => {
         <Route path="/my-donations" element={<PageWrapper><MyDonations /></PageWrapper>} />
         <Route path="/campaign" element={<PageWrapper><Campaign /></PageWrapper>} />
         <Route path="/causes" element={<PageWrapper><Causes /></PageWrapper>} />
-        <Route path="/dashboard" element={<PageWrapper><Dashboard /></PageWrapper>} />
       </Routes>
     </AnimatePresence>
   );

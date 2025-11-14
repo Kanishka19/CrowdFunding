@@ -12,6 +12,24 @@ const segmentData = [
   { title: "Call to Action", icon: "📣" },
 ];
 
+/** Ensure each segment key exists and is an array, even if the backend returns an empty object for a file */
+function normalizeBlogs(raw) {
+  const normalized = {};
+  for (const { title } of segmentData) {
+    const val = raw?.[title];
+    // Accept arrays; coerce non-array truthy values into a single-item array; otherwise use []
+    if (Array.isArray(val)) {
+      normalized[title] = val;
+    } else if (val && typeof val === "object") {
+      // Some backends might return an object instead of array — wrap it
+      normalized[title] = [val];
+    } else {
+      normalized[title] = [];
+    }
+  }
+  return normalized;
+}
+
 const Blogs = () => {
   const [blogs, setBlogs] = useState({});
   const [loading, setLoading] = useState(true);
@@ -22,21 +40,27 @@ const Blogs = () => {
   const [showSubscribe, setShowSubscribe] = useState(false);
 
   useEffect(() => {
-    fetchBlogs()
-      .then((data) => {
-        setBlogs(data);
-        setLoading(false);
-      })
-      .catch(() => {
+    (async () => {
+      try {
+        const data = await fetchBlogs(); // expects a dictionary: { "Founders Journey": [...], ... }
+        setBlogs(normalizeBlogs(data));
+      } catch (e) {
         setError("Failed to fetch blogs.");
+      } finally {
         setLoading(false);
-      });
+      }
+    })();
   }, []);
 
   const allStories = Object.entries(blogs)
-    .flatMap(([segment, stories]) => stories.map((s) => ({ ...s, segment })))
+    .flatMap(([segment, stories]) =>
+      (Array.isArray(stories) ? stories : []).map((s) => ({
+        ...s,
+        segment,
+      }))
+    )
     .filter((story) =>
-      story.title?.toLowerCase().includes(search.toLowerCase())
+      (story.title || "").toLowerCase().includes(search.toLowerCase())
     );
 
   const displayedStories =
@@ -48,7 +72,21 @@ const Blogs = () => {
     <div className="bg-gradient-to-b from-[#f5e6ff] via-[#ece8ff] to-white min-h-screen relative">
       {/* HERO SECTION */}
       <section className="relative py-28 text-center overflow-hidden">
-        <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_top_right,_#cbb2ff_0%,_#f5e6ff_60%,_transparent_100%)]"></div>
+        {/* Background image layer */}
+        <div
+          className="absolute inset-0 -z-20 bg-cover bg-center"
+          style={{
+            backgroundImage:
+              "url(https://media.istockphoto.com/id/2223551599/photo/abstract-curved-lines-forming-a-subtle-striped-pattern-in-gradients-of-grey-and-light-blue.jpg?s=612x612&w=0&k=20&c=AKmJ9kN6aArvKJm9-zlV3PWj_0CufMx91Y9BV3-5O-8=)",
+          }}
+          aria-hidden="true"
+        />
+
+        {/* Soft gradient + subtle blur over the image for readability */}
+        <div className="absolute inset-0 -z-10 bg-gradient-to-b from-white/70 via-white/40 to-white/80 backdrop-blur-[1px]" />
+
+        {/* Radial accent (kept) */}
+        <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_top_right,_#cbb2ff_0%,_#f5e6ff_60%,_transparent_100%)] pointer-events-none" />
 
         <motion.div
           initial={{ opacity: 0, y: -20 }}
@@ -64,12 +102,12 @@ const Blogs = () => {
           >
             Discover Inspiring Stories
           </motion.h1>
-          <p className="text-gray-600 text-lg mb-10">
+          <p className="text-gray-700 text-lg mb-10">
             Real people. Real impact. Real stories. Explore journeys that inspire change.
           </p>
 
           {/* SEARCH BAR */}
-          <div className="relative w-96 mx-auto">
+          <div className="relative w-96 max-w-full mx-auto">
             <Search className="absolute left-4 top-3.5 text-[#694F8E]/70" />
             <input
               type="text"

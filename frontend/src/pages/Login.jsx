@@ -29,7 +29,7 @@ const Login = () => {
       const res = await loginUser(email, password, logout);
       const user = res.data.user;
       login(user);
-      navigate('/dashboard');
+      navigate('/campaign');
     } catch (err) {
       setError(err.response?.data?.message || 'Invalid credentials!');
     } finally {

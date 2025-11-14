@@ -1,77 +1,92 @@
-// Google Drive blog API route
-import express from 'express';
-import getDriveClient from '../helpers/gdrive_service.js';
+import express from "express";
+import { S3Client, GetObjectCommand } from "@aws-sdk/client-s3";
+
 const router = express.Router();
 
-// Blog file names to fetch (now .json files)
+// Configure S3 Client
+const s3 = new S3Client({
+  region: process.env.AWS_REGION,
+  credentials: {
+    accessKeyId: process.env.IAM_ACCESS_KEY,
+    secretAccessKey: process.env.IAM_SECRET_KEY,
+  },
+});
+
+// S3 Bucket name
+const BUCKET = process.env.BLOG_BUCKET_NAME;
+
+// Blog file names in S3
 const BLOG_FILES = [
-  'Founders Journey.json',
-  'Featured Story.json',
-  'Latest Updates.json',
-  'Guides & Tips.json',
-  'Community Impact.json',
-  'Call to Action.json'
+  "Founders Journey.json",
+  "Featured Story.json",
+  "Latest Updates.json",
+  "Guides & Tips.json",
+  "Community Impact.json",
+  "Call to Action.json",
 ];
 
-// In-memory cache for blogs
+// In-memory caching
 let blogsCache = null;
 let cacheTimestamp = 0;
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
-// Helper to get and parse JSON file content by name from 'blogs' folder (parallel fetch)
-async function getBlogFiles(drive) {
-  // Find the 'blogs' folder
-  const folderRes = await drive.files.list({
-    q: "name='Blogs' and mimeType='application/vnd.google-apps.folder'",
-    fields: 'files(id)',
-    spaces: 'drive'
+// Convert S3 file stream to string
+async function bodyToString(stream) {
+  return new Promise((resolve, reject) => {
+    let data = "";
+    stream.on("data", (chunk) => {
+      data += chunk.toString();
+    });
+    stream.on("end", () => resolve(data));
+    stream.on("error", reject);
   });
-  if (!folderRes.data.files.length) throw new Error('Blogs folder not found');
-  const folderId = folderRes.data.files[0].id;
-
-  // Get files in the folder
-  const filesRes = await drive.files.list({
-    q: `'${folderId}' in parents`,
-    fields: 'files(id, name)',
-    spaces: 'drive'
-  });
-  const files = filesRes.data.files;
-
-  // Fetch all blog files in parallel
-  const fetchPromises = BLOG_FILES.map(async (fileName) => {
-    const file = files.find(f => f.name === fileName);
-    let stories = [];
-    if (file) {
-      try {
-        const contentRes = await drive.files.get({
-          fileId: file.id,
-          alt: 'media'
-        }, { responseType: 'text' });
-        stories = JSON.parse(contentRes.data);
-      } catch (e) {
-        stories = [];
-      }
-    }
-    return [fileName.replace('.json', ''), stories];
-  });
-  const results = await Promise.all(fetchPromises);
-  return Object.fromEntries(results);
 }
 
-// GET /api/blogs
-router.get('/', async (req, res) => {
+// Fetch and parse a single JSON file from S3
+async function fetchJsonFromS3(key) {
+  try {
+    const resp = await s3.send(
+      new GetObjectCommand({
+        Bucket: BUCKET,
+        Key: key,
+      })
+    );
+    const text = await bodyToString(resp.Body);
+    return text ? JSON.parse(text) : {};
+  } catch (err) {
+    console.error(`❌ Error reading ${key}:`, err.message);
+    return {}; // Return empty object if file missing or invalid
+  }
+}
+
+
+async function getBlogFilesFromS3() {
+  if (!BUCKET) throw new Error("BLOG_BUCKET_NAME env var is required");
+
+  const promises = BLOG_FILES.map(async (fileName) => {
+    const jsonData = await fetchJsonFromS3(fileName);
+    return [fileName.replace(".json", ""), jsonData];
+  });
+
+  const result = await Promise.all(promises);
+  return Object.fromEntries(result);
+}
+
+router.get("/", async (req, res) => {
   try {
     const now = Date.now();
+
     if (blogsCache && now - cacheTimestamp < CACHE_TTL) {
-      return res.json(blogsCache);
+      return res.json(blogsCache); // Use cache if fresh
     }
-    const drive = getDriveClient("readOnly");
-    const blogs = await getBlogFiles(drive);
-    blogsCache = blogs;
+
+    const blogsDict = await getBlogFilesFromS3();
+    blogsCache = blogsDict;
     cacheTimestamp = now;
-    res.json(blogs);
+
+    return res.json(blogsDict);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    return res.status(500).json({ error: err.message });
   }
 });
 
