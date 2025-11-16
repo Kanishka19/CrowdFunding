@@ -22,7 +22,7 @@ const BLOG_FILES = [
   "Latest Updates.json",
   "Guides & Tips.json",
   "Community Impact.json",
-  "Call to Action.json",
+  "CallToAction.json",
 ];
 
 // In-memory caching

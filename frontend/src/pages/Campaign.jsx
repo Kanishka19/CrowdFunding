@@ -1,5 +1,4 @@
 import React, { useEffect, useState, useRef } from "react";
-import axios from "axios";
 import { ChevronLeft, ChevronRight, X } from "lucide-react";
 import {
   fetchCampaigns,

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { fetchBlogs } from "../api";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, X, Clock, User, Mail } from "lucide-react";
+import { useAuth } from "../context/AuthContext"; // <-- get logged-in user & logout
 
 const segmentData = [
   { title: "Founders Journey", icon: "🚀" },
@@ -9,19 +10,16 @@ const segmentData = [
   { title: "Latest Updates", icon: "📰" },
   { title: "Guides & Tips", icon: "💡" },
   { title: "Community Impact", icon: "🌍" },
-  { title: "Call to Action", icon: "📣" },
+  { title: "CallToAction", icon: "📣" },
 ];
 
-/** Ensure each segment key exists and is an array, even if the backend returns an empty object for a file */
 function normalizeBlogs(raw) {
   const normalized = {};
   for (const { title } of segmentData) {
     const val = raw?.[title];
-    // Accept arrays; coerce non-array truthy values into a single-item array; otherwise use []
     if (Array.isArray(val)) {
       normalized[title] = val;
     } else if (val && typeof val === "object") {
-      // Some backends might return an object instead of array — wrap it
       normalized[title] = [val];
     } else {
       normalized[title] = [];
@@ -29,6 +27,162 @@ function normalizeBlogs(raw) {
   }
   return normalized;
 }
+
+/* ---------- Inline SubmitBlogModal (self-contained) ---------- */
+/* If you already have this component elsewhere, remove this and import it. */
+const SubmitBlogModal = ({ open, onClose, onSubmit, user }) => {
+  const [title, setTitle] = React.useState("");
+  const [category, setCategory] = React.useState("");
+  const [image, setImage] = React.useState(null);
+  const [imagePreview, setImagePreview] = React.useState(null);
+  const [summary, setSummary] = React.useState("");
+  const [content, setContent] = React.useState("");
+  const [submitting, setSubmitting] = React.useState(false);
+
+  React.useEffect(() => {
+    if (!open) {
+      setTitle("");
+      setCategory("");
+      setImage(null);
+      setImagePreview(null);
+      setSummary("");
+      setContent("");
+      setSubmitting(false);
+    }
+  }, [open]);
+
+  function handleImageChange(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setImage(file);
+    const reader = new FileReader();
+    reader.onload = (ev) => setImagePreview(ev.target.result);
+    reader.readAsDataURL(file);
+  }
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+    if (!title.trim() || !content.trim()) {
+      alert("Please provide a title and content.");
+      return;
+    }
+    setSubmitting(true);
+
+    const payload = {
+      title,
+      category,
+      summary,
+      content,
+      author: user?.fullname || user?.name || "Anonymous",
+      email: user?.email,
+    };
+
+    try {
+      await onSubmit(payload, image); // parent handles actual upload
+      onClose();
+    } catch (err) {
+      console.error(err);
+      alert("Failed to submit. Try again.");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  if (!open) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+      <div
+        className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+        onClick={onClose}
+      />
+      <form
+        onSubmit={handleSubmit}
+        className="relative z-60 w-[92%] max-w-3xl bg-white/95 rounded-3xl shadow-2xl p-6 md:p-8 border border-gray-100"
+      >
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <h3 className="text-2xl font-semibold text-[#694F8E]">Share Your Story</h3>
+            <p className="text-sm text-gray-500">Share your experience — inspire others.</p>
+          </div>
+          <div>
+            <button type="button" onClick={onClose} className="text-gray-500 hover:text-gray-700">✕</button>
+          </div>
+        </div>
+
+        <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="col-span-1 md:col-span-2">
+            <label className="block text-sm text-gray-600">Title</label>
+            <input
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="A short, punchy title"
+              className="mt-1 w-full rounded-lg border border-gray-200 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#b897e5]"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm text-gray-600">Category</label>
+            <input
+              value={category}
+              onChange={(e) => setCategory(e.target.value)}
+              placeholder="e.g. Education, Rescue, Community"
+              className="mt-1 w-full rounded-lg border border-gray-200 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#b897e5]"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm text-gray-600">Feature Image</label>
+            <input type="file" accept="image/*" onChange={handleImageChange} className="mt-1" />
+            {imagePreview && (
+              <img src={imagePreview} alt="preview" className="mt-2 h-28 w-full object-cover rounded-md" />
+            )}
+          </div>
+
+          <div className="md:col-span-2">
+            <label className="block text-sm text-gray-600">Short Summary</label>
+            <input
+              value={summary}
+              onChange={(e) => setSummary(e.target.value)}
+              placeholder="A 1–2 sentence summary"
+              className="mt-1 w-full rounded-lg border border-gray-200 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#b897e5]"
+            />
+          </div>
+
+          <div className="md:col-span-2">
+            <label className="block text-sm text-gray-600">Full Content</label>
+            <textarea
+              value={content}
+              onChange={(e) => setContent(e.target.value)}
+              rows={8}
+              placeholder="Write your story..."
+              className="mt-1 w-full rounded-lg border border-gray-200 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#b897e5]"
+            />
+          </div>
+        </div>
+
+        <div className="mt-6 flex items-center justify-end gap-3">
+          <button
+            type="button"
+            onClick={onClose}
+            className="px-4 py-2 rounded-full border border-gray-200 text-gray-700 hover:bg-gray-50"
+          >
+            Cancel
+          </button>
+
+          <button
+            type="submit"
+            disabled={submitting}
+            className="px-5 py-2 rounded-full bg-[#694F8E] text-white font-semibold hover:bg-[#563a70] disabled:opacity-60"
+          >
+            {submitting ? "Submitting..." : "Submit"}
+          </button>
+        </div>
+      </form>
+    </div>
+  );
+};
+/* ---------- end SubmitBlogModal ---------- */
 
 const Blogs = () => {
   const [blogs, setBlogs] = useState({});
@@ -38,6 +192,10 @@ const Blogs = () => {
   const [selectedSegment, setSelectedSegment] = useState("All");
   const [activeStory, setActiveStory] = useState(null);
   const [showSubscribe, setShowSubscribe] = useState(false);
+
+  // modal state for Submit Blog
+  const [submitOpen, setSubmitOpen] = useState(false);
+  const { user } = useAuth(); // get logged-in user
 
   useEffect(() => {
     (async () => {
@@ -68,11 +226,41 @@ const Blogs = () => {
       ? allStories
       : allStories.filter((s) => s.segment === selectedSegment);
 
+  // Replace this with your real API submit function.
+  async function handleSubmitBlog(payload, imageFile) {
+    // Example: create FormData and POST to /api/blogs
+    try {
+      const form = new FormData();
+      form.append("title", payload.title);
+      form.append("category", payload.category || "");
+      form.append("summary", payload.summary || "");
+      form.append("content", payload.content);
+      form.append("author", payload.author || "");
+      form.append("email", payload.email || "");
+      if (imageFile) form.append("image", imageFile);
+
+      // Use your API client / fetch wrapper. Example:
+      // const res = await fetch('/api/blogs', { method: 'POST', body: form });
+      // const result = await res.json();
+      // return result;
+
+      // Stub: simulate network
+      await new Promise((r) => setTimeout(r, 900));
+
+      // Optionally refetch blogs after successful submit:
+      const newData = await fetchBlogs();
+      setBlogs(normalizeBlogs(newData));
+      return true;
+    } catch (err) {
+      console.error("submit blog error", err);
+      throw err;
+    }
+  }
+
   return (
     <div className="bg-gradient-to-b from-[#f5e6ff] via-[#ece8ff] to-white min-h-screen relative">
       {/* HERO SECTION */}
       <section className="relative py-28 text-center overflow-hidden">
-        {/* Background image layer */}
         <div
           className="absolute inset-0 -z-20 bg-cover bg-center"
           style={{
@@ -82,10 +270,8 @@ const Blogs = () => {
           aria-hidden="true"
         />
 
-        {/* Soft gradient + subtle blur over the image for readability */}
         <div className="absolute inset-0 -z-10 bg-gradient-to-b from-white/70 via-white/40 to-white/80 backdrop-blur-[1px]" />
 
-        {/* Radial accent (kept) */}
         <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_top_right,_#cbb2ff_0%,_#f5e6ff_60%,_transparent_100%)] pointer-events-none" />
 
         <motion.div
@@ -274,7 +460,7 @@ const Blogs = () => {
         )}
       </AnimatePresence>
 
-      {/* CTA FOOTER */}
+      {/* CTA FOOTER (opens submit modal) */}
       <section className="text-center py-20 bg-gradient-to-r from-[#b897e5]/30 to-[#f5e6ff]/30 mt-20 backdrop-blur-md rounded-t-3xl">
         <h2 className="text-4xl font-bold text-[#694F8E] mb-4">
           Want to Share Your Story?
@@ -282,12 +468,15 @@ const Blogs = () => {
         <p className="text-gray-600 mb-8">
           We love featuring inspiring journeys. Submit your story and join our community.
         </p>
-        <button className="px-6 py-3 bg-[#694F8E] text-white font-semibold rounded-full hover:bg-[#563a70] transition-all">
+        <button
+          onClick={() => setSubmitOpen(true)}
+          className="px-6 py-3 bg-[#694F8E] text-white font-semibold rounded-full hover:bg-[#563a70] transition-all"
+        >
           Submit a Blog →
         </button>
       </section>
 
-      {/* FLOATING SUBSCRIBE BUTTON */}
+      {/* Floating Subscribe Button */}
       <button
         onClick={() => setShowSubscribe(true)}
         className="fixed bottom-6 right-6 bg-[#694F8E] text-white rounded-full shadow-xl hover:scale-105 transition-all px-5 py-3 font-semibold z-50"
@@ -339,6 +528,14 @@ const Blogs = () => {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Submit Blog Modal */}
+      <SubmitBlogModal
+        open={submitOpen}
+        onClose={() => setSubmitOpen(false)}
+        onSubmit={handleSubmitBlog}
+        user={user}
+      />
     </div>
   );
 };
