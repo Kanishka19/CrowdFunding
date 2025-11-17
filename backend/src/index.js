@@ -2,6 +2,7 @@ import express from "express";
 import auth from "./routes/auth.js"
 import paymentRoutes from "./routes/payment.js"
 import blogRoutes from "./routes/blogs.js"
+import profileRoutes from "./routes/profile.js"
 import morgan from "morgan";
 import createError from "http-errors";
 import {} from "dotenv/config";
@@ -41,6 +42,7 @@ app.use('/api/cause',causesRoutes);
 app.use("/api/contact",contactRoutes);
 app.use('/api/payment',verifyJwtToken,paymentRoutes)
 app.use('/api/blogs',blogRoutes)
+app.use('/api/profile',profileRoutes)
 app.use('/api/org-campaign',campaignOrgRoutes)
 app.use('/api/fileupload',orgRegRoutes)
 app.use('/admin',adminAPIRoutes)
@@ -63,5 +65,3 @@ const PORT = process.env.PORT || 9000
 app.listen(PORT,() => {
     console.log(`Server is running on http://localhost:${PORT}`);
 })
-
-

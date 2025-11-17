@@ -4,10 +4,12 @@ import { User, LogOut, Cog, UserCheck } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { AiOutlineClose, AiOutlineMenu } from "react-icons/ai";
 import logo from "../assets/logoss.png";
+import SettingsModal from "../components/SettingsModal";
 
 const UserNav = () => {
   const [nav, setNav] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
   const { logout, user } = useAuth();
   const profileRef = useRef(null);
 
@@ -86,11 +88,16 @@ const UserNav = () => {
                   <span className="text-[#694F8E]">Profile</span>
                 </Link>
 
-                <Link to="/settings" className="flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-white/60 hover:bg-white/80 border border-gray-100 text-sm">
-                  {/* inline gear icon */}
+                <button 
+                  onClick={() => {
+                    setShowSettings(true);
+                    setProfileOpen(false);
+                  }} 
+                  className="flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-white/60 hover:bg-white/80 border border-gray-100 text-sm w-full"
+                >
                   <Cog className="text-black w-4 h-4" />
                   <span className="text-[#694F8E]">Settings</span>
-                </Link>
+                </button>
               </div>
 
               <div className="border-t my-1"></div>
@@ -171,6 +178,12 @@ const UserNav = () => {
           </button>
         </li>
       </ul>
+      
+      {/* Settings Modal */}
+      <SettingsModal 
+        isOpen={showSettings} 
+        onClose={() => setShowSettings(false)} 
+      />
     </div>
   );
 };

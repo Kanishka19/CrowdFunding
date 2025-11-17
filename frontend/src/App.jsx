@@ -18,6 +18,7 @@ import Blogs from "./pages/Blogs";
 import MyDonations from "./pages/myDonations";
 import Campaign from "./pages/Campaign";
 import Causes from "./pages/Causes";
+import Profile from "./pages/Profile";
 import {useAuth} from "./context/AuthContext"
 
 const PageWrapper = ({ children }) => {
@@ -53,6 +54,7 @@ const AnimatedRoutes = ({ user }) => {
         <Route path="/my-donations" element={<PageWrapper><MyDonations /></PageWrapper>} />
         <Route path="/campaign" element={<PageWrapper><Campaign /></PageWrapper>} />
         <Route path="/causes" element={<PageWrapper><Causes /></PageWrapper>} />
+        <Route path="/profile" element={<PageWrapper><Profile /></PageWrapper>} />
       </Routes>
     </AnimatePresence>
   );

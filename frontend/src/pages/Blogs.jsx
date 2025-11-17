@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
-import { fetchBlogs } from "../api";
+import { fetchBlogs, submitBlog } from "../api";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, X, Clock, User, Mail } from "lucide-react";
+import { Search, X, Clock, User, ArrowRight } from "lucide-react";
 import { useAuth } from "../context/AuthContext"; // <-- get logged-in user & logout
 
 const segmentData = [
@@ -38,6 +38,9 @@ const SubmitBlogModal = ({ open, onClose, onSubmit, user }) => {
   const [summary, setSummary] = React.useState("");
   const [content, setContent] = React.useState("");
   const [submitting, setSubmitting] = React.useState(false);
+  const [submitStatus, setSubmitStatus] = React.useState(null); // 'success', 'error', null
+  const [statusMessage, setStatusMessage] = React.useState("");
+  const [previewUrl, setPreviewUrl] = React.useState("");
 
   React.useEffect(() => {
     if (!open) {
@@ -48,6 +51,9 @@ const SubmitBlogModal = ({ open, onClose, onSubmit, user }) => {
       setSummary("");
       setContent("");
       setSubmitting(false);
+      setSubmitStatus(null);
+      setStatusMessage("");
+      setPreviewUrl("");
     }
   }, [open]);
 
@@ -63,10 +69,12 @@ const SubmitBlogModal = ({ open, onClose, onSubmit, user }) => {
   async function handleSubmit(e) {
     e.preventDefault();
     if (!title.trim() || !content.trim()) {
-      alert("Please provide a title and content.");
+      setSubmitStatus("error");
+      setStatusMessage("Please provide a title and content.");
       return;
     }
     setSubmitting(true);
+    setSubmitStatus(null);
 
     const payload = {
       title,
@@ -77,12 +85,27 @@ const SubmitBlogModal = ({ open, onClose, onSubmit, user }) => {
       email: user?.email,
     };
 
+    console.log("📤 Submitting blog with user data:", {
+      author: payload.author,
+      email: payload.email,
+      title: payload.title
+    });
+
     try {
-      await onSubmit(payload, image); // parent handles actual upload
-      onClose();
+      const result = await onSubmit(payload, image);
+      setSubmitStatus("success");
+      setStatusMessage(result?.message || "Your story has been submitted successfully!");
+      if (result?.previewUrl) {
+        setPreviewUrl(result.previewUrl);
+      }
+      // Auto close after success animation
+      setTimeout(() => {
+        onClose();
+      }, 3000);
     } catch (err) {
       console.error(err);
-      alert("Failed to submit. Try again.");
+      setSubmitStatus("error");
+      setStatusMessage(err?.response?.data?.error || "Failed to submit. Please try again.");
     } finally {
       setSubmitting(false);
     }
@@ -91,94 +114,307 @@ const SubmitBlogModal = ({ open, onClose, onSubmit, user }) => {
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
+    <div className="fixed inset-0 z-50 flex items-center justify-center px-4 py-10">
+      {/* Animated background orbs matching login/signup */}
+      <motion.div className="absolute -top-32 -left-28 w-72 h-72 rounded-full bg-purple-300/30 blur-3xl" animate={{ scale: [1,1.15,1], opacity:[0.45,0.6,0.45] }} transition={{ duration: 12, repeat: Infinity }} />
+      <motion.div className="absolute -bottom-40 -right-32 w-80 h-80 rounded-full bg-pink-300/30 blur-3xl" animate={{ scale: [1,1.2,1], opacity:[0.4,0.55,0.4] }} transition={{ duration: 14, repeat: Infinity }} />
+      <motion.div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[38rem] h-[38rem] rounded-full bg-gradient-to-tr from-purple-200/20 via-pink-100/10 to-purple-300/20 blur-2xl" animate={{ rotate: 360 }} transition={{ duration: 40, repeat: Infinity, ease: 'linear' }} />
+      
+      {/* Backdrop */}
       <div
-        className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+        className="absolute inset-0 bg-[radial-gradient(circle_at_30%_30%,#d8c7ff_0%,#f3e8ff_50%,rgba(0,0,0,0.6)_100%)] backdrop-blur-md"
         onClick={onClose}
       />
-      <form
+      
+      <motion.form
+        initial={{ opacity: 0, y: 40 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: 40 }}
+        transition={{ duration: 0.6 }}
         onSubmit={handleSubmit}
-        className="relative z-60 w-[92%] max-w-3xl bg-white/95 rounded-3xl shadow-2xl p-6 md:p-8 border border-gray-100"
+        className="relative z-60 w-full max-w-4xl bg-white/70 backdrop-blur-xl border border-white/50 shadow-2xl rounded-3xl px-10 pt-10 pb-8 overflow-hidden"
       >
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <h3 className="text-2xl font-semibold text-[#694F8E]">Share Your Story</h3>
-            <p className="text-sm text-gray-500">Share your experience — inspire others.</p>
+        {/* Glass morphism effect matching login/signup */}
+        <div className="absolute inset-0 rounded-3xl pointer-events-none [mask-image:linear-gradient(to_bottom,rgba(255,255,255,0.85),rgba(255,255,255,0.35))]" />
+        
+        {/* Header Section */}
+        <div className="relative z-10 flex items-start justify-between gap-4 mb-8">
+          <div className="flex-1">
+            <motion.h2 
+              initial={{ opacity:0, y:-15 }} 
+              animate={{ opacity:1, y:0 }} 
+              className="text-3xl font-bold mb-3 bg-gradient-to-r from-purple-600 to-pink-600 text-transparent bg-clip-text"
+            >
+              ✨ Share Your Story
+            </motion.h2>
+            <p className="text-gray-600 text-lg mb-4">Your experience matters — inspire the community</p>
+            {user && (
+              <div className="flex items-center gap-3 bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl px-4 py-3 border border-purple-200/50">
+                <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center text-white text-lg font-bold">
+                  {(user.fullname || user.name || "A")[0].toUpperCase()}
+                </div>
+                <div>
+                  <div className="font-semibold text-gray-700">{user.fullname || user.name || "Anonymous"}</div>
+                  <div className="text-gray-500 text-sm">{user.email || "No email"}</div>
+                </div>
+              </div>
+            )}
           </div>
-          <div>
-            <button type="button" onClick={onClose} className="text-gray-500 hover:text-gray-700">✕</button>
-          </div>
+          <button 
+            type="button" 
+            onClick={onClose} 
+            className="w-10 h-10 bg-gray-100 hover:bg-gray-200 rounded-full flex items-center justify-center text-gray-600 text-xl transition-all duration-200 hover:scale-110"
+          >
+            ×
+          </button>
         </div>
 
-        <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="col-span-1 md:col-span-2">
-            <label className="block text-sm text-gray-600">Title</label>
+        {/* Status Animation */}
+        <AnimatePresence mode="wait">
+          {submitStatus && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8, y: -20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.8, y: -20 }}
+              transition={{ duration: 0.5, type: "spring", damping: 15 }}
+              className="relative z-10 mb-6"
+            >
+              {submitStatus === "success" ? (
+                <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-2xl p-6">
+                  <div className="flex items-center gap-4">
+                    <motion.div
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      transition={{ delay: 0.2, type: "spring", damping: 10 }}
+                      className="w-16 h-16 bg-gradient-to-r from-green-500 to-emerald-500 rounded-full flex items-center justify-center"
+                    >
+                      <motion.svg
+                        initial={{ pathLength: 0 }}
+                        animate={{ pathLength: 1 }}
+                        transition={{ delay: 0.5, duration: 0.8 }}
+                        className="w-8 h-8 text-white"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <motion.path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={3}
+                          d="M5 13l4 4L19 7"
+                        />
+                      </motion.svg>
+                    </motion.div>
+                    <div className="flex-1">
+                      <motion.h3
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: 0.3 }}
+                        className="text-xl font-bold text-green-700 mb-2"
+                      >
+                        🎉 Success!
+                      </motion.h3>
+                      <motion.p
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: 0.4 }}
+                        className="text-green-600"
+                      >
+                        {statusMessage}
+                      </motion.p>
+                      {previewUrl && (
+                        <motion.div
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: 0.6 }}
+                          className="mt-3"
+                        >
+                          <a
+                            href={previewUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-sm text-green-600 hover:text-green-700 underline"
+                          >
+                            🔗 View Email Preview
+                          </a>
+                        </motion.div>
+                      )}
+                    </div>
+                  </div>
+                  <motion.div
+                    initial={{ scaleX: 0 }}
+                    animate={{ scaleX: 1 }}
+                    transition={{ delay: 0.7, duration: 3 }}
+                    className="mt-4 h-1 bg-gradient-to-r from-green-400 to-emerald-400 rounded-full origin-left"
+                  />
+                </div>
+              ) : (
+                <div className="bg-gradient-to-r from-red-50 to-rose-50 border border-red-200 rounded-2xl p-6">
+                  <div className="flex items-center gap-4">
+                    <motion.div
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      transition={{ delay: 0.2, type: "spring", damping: 10 }}
+                      className="w-16 h-16 bg-gradient-to-r from-red-500 to-rose-500 rounded-full flex items-center justify-center"
+                    >
+                      <motion.div
+                        initial={{ rotate: 0 }}
+                        animate={{ rotate: 360 }}
+                        transition={{ delay: 0.3, duration: 0.5 }}
+                      >
+                        <X className="w-8 h-8 text-white" />
+                      </motion.div>
+                    </motion.div>
+                    <div className="flex-1">
+                      <motion.h3
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: 0.3 }}
+                        className="text-xl font-bold text-red-700 mb-2"
+                      >
+                        ❌ Oops!
+                      </motion.h3>
+                      <motion.p
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: 0.4 }}
+                        className="text-red-600"
+                      >
+                        {statusMessage}
+                      </motion.p>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Form Fields */}
+        <div className="space-y-6 relative z-10">
+          {/* Title Field */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Blog Title <span className="text-red-500">*</span>
+            </label>
             <input
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="A short, punchy title"
-              className="mt-1 w-full rounded-lg border border-gray-200 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#b897e5]"
+              placeholder="Enter a captivating title for your story..."
+              className="w-full rounded-xl border border-gray-200 bg-white/70 backdrop-blur-sm px-4 py-3 text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition"
             />
           </div>
 
-          <div>
-            <label className="block text-sm text-gray-600">Category</label>
-            <input
-              value={category}
-              onChange={(e) => setCategory(e.target.value)}
-              placeholder="e.g. Education, Rescue, Community"
-              className="mt-1 w-full rounded-lg border border-gray-200 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#b897e5]"
-            />
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Category Field */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Category
+              </label>
+              <select
+                value={category}
+                onChange={(e) => setCategory(e.target.value)}
+                className="w-full rounded-xl border border-gray-200 bg-white/70 backdrop-blur-sm px-4 py-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition"
+              >
+                <option value="">Select a category</option>
+                {segmentData.map(({ title, icon }) => (
+                  <option key={title} value={title}>
+                    {icon} {title}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Image Upload Field */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Feature Image
+              </label>
+              <input 
+                type="file" 
+                accept="image/*" 
+                onChange={handleImageChange} 
+                className="w-full rounded-xl border border-gray-200 bg-white/70 backdrop-blur-sm px-4 py-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition file:mr-4 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-sm file:bg-purple-600 file:text-white hover:file:bg-purple-700"
+              />
+              {imagePreview && (
+                <div className="mt-3">
+                  <img 
+                    src={imagePreview} 
+                    alt="preview" 
+                    className="w-full h-32 object-cover rounded-xl border border-gray-200 shadow-sm" 
+                  />
+                </div>
+              )}
+            </div>
           </div>
 
+          {/* Summary Field */}
           <div>
-            <label className="block text-sm text-gray-600">Feature Image</label>
-            <input type="file" accept="image/*" onChange={handleImageChange} className="mt-1" />
-            {imagePreview && (
-              <img src={imagePreview} alt="preview" className="mt-2 h-28 w-full object-cover rounded-md" />
-            )}
-          </div>
-
-          <div className="md:col-span-2">
-            <label className="block text-sm text-gray-600">Short Summary</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Short Summary
+            </label>
             <input
               value={summary}
               onChange={(e) => setSummary(e.target.value)}
-              placeholder="A 1–2 sentence summary"
-              className="mt-1 w-full rounded-lg border border-gray-200 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#b897e5]"
+              placeholder="A compelling 1-2 sentence summary..."
+              className="w-full rounded-xl border border-gray-200 bg-white/70 backdrop-blur-sm px-4 py-3 text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition"
             />
           </div>
 
-          <div className="md:col-span-2">
-            <label className="block text-sm text-gray-600">Full Content</label>
+          {/* Content Field */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Your Story <span className="text-red-500">*</span>
+            </label>
             <textarea
               value={content}
               onChange={(e) => setContent(e.target.value)}
               rows={8}
-              placeholder="Write your story..."
-              className="mt-1 w-full rounded-lg border border-gray-200 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#b897e5]"
+              placeholder="Share your journey, experiences, challenges, and victories..."
+              className="w-full rounded-xl border border-gray-200 bg-white/70 backdrop-blur-sm px-4 py-3 text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition resize-none"
             />
           </div>
         </div>
 
-        <div className="mt-6 flex items-center justify-end gap-3">
-          <button
-            type="button"
-            onClick={onClose}
-            className="px-4 py-2 rounded-full border border-gray-200 text-gray-700 hover:bg-gray-50"
-          >
-            Cancel
-          </button>
+        {/* Footer Buttons */}
+        <div className="flex items-center justify-between gap-4 mt-8 pt-6 border-t border-gray-200">
+          <div className="text-xs text-gray-500">
+            <span className="text-red-500">*</span> Required fields
+          </div>
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-6 py-2 rounded-xl border border-gray-200 bg-white/70 backdrop-blur-sm text-gray-700 font-medium hover:border-purple-400 hover:shadow-md transition"
+            >
+              Cancel
+            </button>
 
-          <button
-            type="submit"
-            disabled={submitting}
-            className="px-5 py-2 rounded-full bg-[#694F8E] text-white font-semibold hover:bg-[#563a70] disabled:opacity-60"
-          >
-            {submitting ? "Submitting..." : "Submit"}
-          </button>
+            <motion.button
+              type="submit"
+              disabled={submitting}
+              whileTap={{ scale: 0.95 }}
+              whileHover={{ scale: 1.02 }}
+              className="flex items-center gap-2 bg-gradient-to-r from-purple-600 to-pink-500 text-white font-semibold px-6 py-3 rounded-xl shadow-lg shadow-purple-600/30 hover:brightness-110 transition disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {submitting ? (
+                <>
+                  <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                    <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" className="opacity-25"/>
+                    <path fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" className="opacity-75"/>
+                  </svg>
+                  Submitting...
+                </>
+              ) : (
+                <>
+                  Share My Story
+                  <ArrowRight size={18} />
+                </>
+              )}
+            </motion.button>
+          </div>
         </div>
-      </form>
+      </motion.form>
     </div>
   );
 };
@@ -191,7 +427,7 @@ const Blogs = () => {
   const [search, setSearch] = useState("");
   const [selectedSegment, setSelectedSegment] = useState("All");
   const [activeStory, setActiveStory] = useState(null);
-  const [showSubscribe, setShowSubscribe] = useState(false);
+
 
   // modal state for Submit Blog
   const [submitOpen, setSubmitOpen] = useState(false);
@@ -226,34 +462,35 @@ const Blogs = () => {
       ? allStories
       : allStories.filter((s) => s.segment === selectedSegment);
 
-  // Replace this with your real API submit function.
+  // Submit blog via email API
   async function handleSubmitBlog(payload, imageFile) {
-    // Example: create FormData and POST to /api/blogs
     try {
-      const form = new FormData();
-      form.append("title", payload.title);
-      form.append("category", payload.category || "");
-      form.append("summary", payload.summary || "");
-      form.append("content", payload.content);
-      form.append("author", payload.author || "");
-      form.append("email", payload.email || "");
-      if (imageFile) form.append("image", imageFile);
-
-      // Use your API client / fetch wrapper. Example:
-      // const res = await fetch('/api/blogs', { method: 'POST', body: form });
-      // const result = await res.json();
-      // return result;
-
-      // Stub: simulate network
-      await new Promise((r) => setTimeout(r, 900));
-
-      // Optionally refetch blogs after successful submit:
-      const newData = await fetchBlogs();
-      setBlogs(normalizeBlogs(newData));
-      return true;
+      const result = await submitBlog(payload, imageFile);
+      
+      console.log("📧 Blog submission successful:", result);
+      
+      // Open preview URL in new tab if available
+      if (result.previewUrl) {
+        window.open(result.previewUrl, '_blank');
+      }
+      
+      // Return the result for the modal to handle
+      return {
+        message: result.message || "Your story has been submitted successfully! The admin will review it soon.",
+        previewUrl: result.previewUrl
+      };
     } catch (err) {
       console.error("submit blog error", err);
-      throw err;
+      console.error("Full error details:", err.response?.data);
+      
+      // Throw the error for the modal to handle
+      throw {
+        response: {
+          data: {
+            error: err.response?.data?.error || "Failed to submit blog. Please try again."
+          }
+        }
+      };
     }
   }
 
@@ -476,58 +713,7 @@ const Blogs = () => {
         </button>
       </section>
 
-      {/* Floating Subscribe Button */}
-      <button
-        onClick={() => setShowSubscribe(true)}
-        className="fixed bottom-6 right-6 bg-[#694F8E] text-white rounded-full shadow-xl hover:scale-105 transition-all px-5 py-3 font-semibold z-50"
-      >
-        ✉️ Subscribe
-      </button>
 
-      {/* SUBSCRIBE MODAL */}
-      <AnimatePresence>
-        {showSubscribe && (
-          <motion.div
-            className="fixed inset-0 bg-black/40 backdrop-blur-md flex items-center justify-center z-50"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-          >
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              className="bg-white rounded-3xl shadow-xl p-8 w-full max-w-md relative"
-            >
-              <button
-                onClick={() => setShowSubscribe(false)}
-                className="absolute top-4 right-4 text-gray-500 hover:text-black"
-              >
-                <X size={20} />
-              </button>
-              <h3 className="text-2xl font-bold text-[#694F8E] mb-4">
-                Subscribe for Updates
-              </h3>
-              <p className="text-gray-600 mb-6">
-                Get notified when new stories are published.
-              </p>
-              <div className="flex flex-col gap-4">
-                <div className="relative">
-                  <Mail className="absolute left-3 top-3 text-gray-400" />
-                  <input
-                    type="email"
-                    placeholder="Your email address"
-                    className="w-full border rounded-full py-3 pl-10 pr-4 focus:ring-2 focus:ring-[#694F8E] outline-none"
-                  />
-                </div>
-                <button className="w-full bg-[#694F8E] text-white rounded-full py-3 font-semibold hover:bg-[#563a70] transition">
-                  Subscribe
-                </button>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
 
       {/* Submit Blog Modal */}
       <SubmitBlogModal

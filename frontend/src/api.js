@@ -85,3 +85,60 @@ export const fetchUploadOrg = async (orgId, orgFiles) => {
   const res = await API.post("/fileupload/uploadOrg",formdata,{ withCredentials: true });
   return res.data;
 }
+
+// Submit blog via email
+export const submitBlog = async (blogData, imageFile) => {
+  const formData = new FormData();
+  
+  // Add text fields
+  formData.append("title", blogData.title);
+  formData.append("category", blogData.category || "");
+  formData.append("summary", blogData.summary || "");
+  formData.append("content", blogData.content);
+  formData.append("author", blogData.author || "");
+  formData.append("email", blogData.email || "");
+  
+  // Add image if provided
+  if (imageFile) {
+    formData.append("image", imageFile);
+  }
+  
+  const res = await API.post("/blogs/submit", formData, {
+    withCredentials: true,
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  });
+  
+  return res.data;
+}
+
+// Profile API functions
+export const fetchUserProfile = async () => {
+  const res = await API.get("/profile", { withCredentials: true });
+  return res.data;
+};
+
+export const updateUserProfile = async (profileData) => {
+  const res = await API.put("/profile", profileData, { withCredentials: true });
+  return res.data;
+};
+
+export const uploadProfilePicture = async (imageFile) => {
+  const formData = new FormData();
+  formData.append("profilePicture", imageFile);
+  
+  const res = await API.post("/profile/upload-picture", formData, {
+    withCredentials: true,
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  });
+  
+  return res.data;
+};
+
+export const deleteProfilePicture = async () => {
+  const res = await API.delete("/profile/picture", { withCredentials: true });
+  return res.data;
+};
