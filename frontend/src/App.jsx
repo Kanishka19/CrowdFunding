@@ -15,7 +15,7 @@ import Home from "./pages/Home";
 import UserNav from "./pages/userNav";
 import Donate from "./pages/Donate";
 import Blogs from "./pages/Blogs";
-import MyDonations from "./pages/myDonations";
+import MyDonations from "./pages/MyDonations";
 import Campaign from "./pages/Campaign";
 import Causes from "./pages/Causes";
 import Profile from "./pages/Profile";
