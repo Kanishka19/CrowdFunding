@@ -26,7 +26,7 @@ const authLimiter = rateLimit({
 const app = express();
 app.disable('etag')
 app.use(cors({
-    origin: 'http://localhost:5173', // Frontend origin
+    origin: 'https://www.fundmemaybe.co.in', // Frontend origin
     methods: ['GET', 'POST', 'PUT', 'DELETE'], // Allowed HTTP methods
     allowedHeaders: ['Content-Type', 'Authorization'], // Allowed headers
   }));

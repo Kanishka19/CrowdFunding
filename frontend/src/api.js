@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const API = axios.create({
-  baseURL: "/api", // Change this to match your backend URL
+  baseURL: "https://api.fundmemaybe.co.in/api", // Change this to match your backend URL
   withCredentials: true, // Allows cookies (tokens)
 });
 
