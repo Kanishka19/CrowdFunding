@@ -29,6 +29,7 @@ app.use(cors({
     origin: 'https://www.fundmemaybe.co.in', // Frontend origin
     methods: ['GET', 'POST', 'PUT', 'DELETE'], // Allowed HTTP methods
     allowedHeaders: ['Content-Type', 'Authorization'], // Allowed headers
+    credentials: true 
   }));
 app.use(morgan('dev'))
 //to parse the request body if it is JSON
